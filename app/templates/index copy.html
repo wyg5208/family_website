@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}首页 - 家庭网站{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded">
+    <h1 class="display-4">欢迎来到家庭网站</h1>
+    <p class="lead">这是一个管理家庭相册、大事记和日程的平台</p>
+    <hr class="my-4">
+    <p>开始使用我们的功能，记录和管理您的家庭珍贵时刻。</p>
+    {% if not current_user.is_authenticated %}
+    <div class="mt-4">
+        <a class="btn btn-primary btn-lg me-2" href="{{ url_for('auth.login') }}" role="button">登录</a>
+        <a class="btn btn-outline-primary btn-lg" href="{{ url_for('auth.register') }}" role="button">注册</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-images me-2"></i>最新相册</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_albums %}
+                <div class="list-group">
+                    {% for album in recent_albums %}
+                    <a href="{{ url_for('album.view_album', album_id=album.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ album.title }}</h5>
+                            <small>{{ album.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <p class="mb-1 text-truncate">{{ album.description or '无描述' }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">暂无相册</p>
+                {% endif %}
+                <div class="mt-3">
+                    <a href="{{ url_for('album.index') }}" class="btn btn-outline-primary">查看所有相册</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-history me-2"></i>最近大事记</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_events %}
+                <div class="list-group">
+                    {% for event in recent_events %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ event.title }}</h5>
+                            <small>{{ event.date.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <p class="mb-1 text-truncate">{{ event.description or '无描述' }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">暂无大事记</p>
+                {% endif %}
+                <div class="mt-3">
+                    <a href="{{ url_for('timeline.index') }}" class="btn btn-outline-success">查看所有大事记</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0"><i class="fas fa-calendar-alt me-2"></i>即将到来的日程</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_schedules %}
+                <div class="list-group">
+                    {% for schedule in upcoming_schedules %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ schedule.title }}</h5>
+                            <small>{{ schedule.start_time.strftime('%m-%d %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1 text-truncate">{{ schedule.description or '无描述' }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">暂无即将到来的日程</p>
+                {% endif %}
+                <div class="mt-3">
+                    <a href="{{ url_for('calendar.index') }}" class="btn btn-outline-warning">查看所有日程</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

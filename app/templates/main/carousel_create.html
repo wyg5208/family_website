@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}添加轮播图 - 家庭网站{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('main.carousel_list') }}">轮播图管理</a></li>
+        <li class="breadcrumb-item active" aria-current="page">添加轮播图</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>添加轮播图</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title(class="form-control", id="title") }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.title.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description(class="form-control", id="description", rows=3) }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">{{ form.image.label }}</label>
+                        {{ form.image(class="form-control", id="image") }}
+                        <div class="form-text">推荐尺寸：1200 x 400 像素</div>
+                        {% if form.image.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.image.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="order" class="form-label">{{ form.order.label }}</label>
+                        {{ form.order(class="form-control", id="order") }}
+                        <div class="form-text">数字越小排序越靠前</div>
+                        {% if form.order.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.order.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.active(class="form-check-input", id="active") }}
+                        <label class="form-check-label" for="active">{{ form.active.label }}</label>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('main.carousel_list') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>取消
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

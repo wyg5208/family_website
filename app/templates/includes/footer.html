@@ -1,0 +1,27 @@
+<footer class="footer mt-5 py-3 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 text-center text-md-start">
+                <h5>家庭网站</h5>
+                <p class="text-muted">一个用于记录和分享家庭珍贵回忆的平台</p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <ul class="list-inline mb-0">
+                    <li class="list-inline-item">
+                        <a href="{{ url_for('main.index') }}" class="text-decoration-none text-muted">首页</a>
+                    </li>
+                    <li class="list-inline-item">
+                        <a href="{{ url_for('album.index') }}" class="text-decoration-none text-muted">相册</a>
+                    </li>
+                    <li class="list-inline-item">
+                        <a href="{{ url_for('timeline.index') }}" class="text-decoration-none text-muted">时间线</a>
+                    </li>
+                    <li class="list-inline-item">
+                        <a href="{{ url_for('calendar.index') }}" class="text-decoration-none text-muted">日历</a>
+                    </li>
+                </ul>
+                <p class="mt-2 mb-0 text-muted">© {{ current_year|default(2025) }} 家庭网站 - 由 <a href="https://flask.palletsprojects.com/" target="_blank" class="text-decoration-none">Flask</a> 强力驱动</p>
+            </div>
+        </div>
+    </div>
+</footer> 

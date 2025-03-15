@@ -1,0 +1,105 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">
+            <i class="fas fa-home me-2"></i>家庭网站
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">
+                        <i class="fas fa-home me-1"></i>首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('album.') %}active{% endif %}" href="{{ url_for('album.index') }}">
+                        <i class="fas fa-images me-1"></i>相册
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('timeline.') %}active{% endif %}" href="{{ url_for('timeline.index') }}">
+                        <i class="fas fa-history me-1"></i>时间线
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('calendar.') %}active{% endif %}" href="{{ url_for('calendar.index') }}">
+                        <i class="far fa-calendar-alt me-1"></i>日历
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <!-- 色彩主题切换下拉菜单 -->
+                <li class="nav-item dropdown me-2">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="colorThemeButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-palette me-1"></i>
+                        <span class="theme-name d-none d-md-inline">蓝色系</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="colorThemeButton">
+                        <li>
+                            <a class="dropdown-item color-theme-option" href="#" data-theme="blue">
+                                <i class="fas fa-circle me-2 text-primary"></i>蓝色系
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item color-theme-option" href="#" data-theme="purple">
+                                <i class="fas fa-circle me-2" style="color: #6f42c1;"></i>紫色系
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item color-theme-option" href="#" data-theme="gray">
+                                <i class="fas fa-circle me-2" style="color: #495057;"></i>灰色系
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item color-theme-option" href="#" data-theme="green">
+                                <i class="fas fa-circle me-2" style="color: #198754;"></i>绿色系
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                
+                <!-- 主题切换按钮 -->
+                <li class="nav-item me-2">
+                    <button id="theme-toggle" class="btn btn-outline-light" type="button">
+                        <i id="theme-icon" class="fas fa-sun me-1"></i>
+                        <span id="theme-text" class="d-none d-md-inline">切换到明亮模式</span>
+                    </button>
+                </li>
+                
+                {% if current_user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                <i class="fas fa-id-card me-1"></i>个人资料
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt me-1"></i>退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}" href="{{ url_for('auth.login') }}">
+                        <i class="fas fa-sign-in-alt me-1"></i>登录
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'auth.register' %}active{% endif %}" href="{{ url_for('auth.register') }}">
+                        <i class="fas fa-user-plus me-1"></i>注册
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav> 

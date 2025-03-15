@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ album.title }} - 家庭网站{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('album.index') }}">相册</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ album.title }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-images me-2"></i>{{ album.title }}</h2>
+        <p class="text-muted">{{ album.description or '无描述' }}</p>
+        <p class="text-muted">
+            <small>创建于 {{ album.created_at.strftime('%Y-%m-%d') }} | {{ album.photos.count() }} 张照片</small>
+        </p>
+    </div>
+    <div>
+        {% if current_user.is_authenticated and current_user.id == album.user_id %}
+        <a href="{{ url_for('album.upload_photo', album_id=album.id) }}" class="btn btn-primary me-2">
+            <i class="fas fa-upload me-1"></i>上传照片
+        </a>
+        <a href="{{ url_for('album.delete_album', album_id=album.id) }}" class="btn btn-danger" 
+           onclick="return confirm('确定要删除这个相册吗？所有照片将被永久删除！');">
+            <i class="fas fa-trash-alt me-1"></i>删除相册
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if photos %}
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for photo in photos %}
+    <div class="col">
+        <div class="card photo-card h-100">
+            <a href="{{ url_for('static', filename='uploads/photos/' + photo.filename.split('/')[-1]) }}" 
+               class="photo-link" data-title="{{ album.title }}" 
+               data-desc="{{ photo.description or '无描述' }}">
+                <img src="{{ url_for('static', filename='uploads/photos/' + photo.filename.split('/')[-1]) }}" 
+                     class="card-img-top photo-img" alt="{{ photo.description or '照片' }}">
+            </a>
+            <div class="card-body">
+                <p class="card-text">{{ photo.description or '无描述' }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">{{ photo.uploaded_at.strftime('%Y-%m-%d') }}</small>
+                    {% if current_user.is_authenticated and current_user.id == album.user_id %}
+                    <a href="{{ url_for('album.delete_photo', photo_id=photo.id) }}" class="btn btn-sm btn-outline-danger"
+                       onclick="return confirm('确定要删除这张照片吗？');">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 照片查看模态框 -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="photoModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="photoModalImg" class="img-fluid" src="" alt="">
+                <p id="photoModalDesc" class="mt-3"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>该相册暂无照片，请上传照片。
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 照片点击事件
+        var photoLinks = document.querySelectorAll('.photo-link');
+        var photoModal = document.getElementById('photoModal');
+        var modalInstance = null;
+        
+        photoLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var imgSrc = this.getAttribute('href');
+                var imgTitle = this.getAttribute('data-title');
+                var imgDesc = this.getAttribute('data-desc');
+                
+                document.getElementById('photoModalLabel').textContent = imgTitle;
+                document.getElementById('photoModalImg').setAttribute('src', imgSrc);
+                document.getElementById('photoModalDesc').textContent = imgDesc;
+                
+                // 创建新的模态框实例
+                modalInstance = new bootstrap.Modal(photoModal);
+                modalInstance.show();
+            });
+        });
+        
+        // 确保模态框关闭后清理背景遮罩
+        photoModal.addEventListener('hidden.bs.modal', function() {
+            // 移除所有可能残留的模态框背景
+            var modalBackdrops = document.querySelectorAll('.modal-backdrop');
+            modalBackdrops.forEach(function(backdrop) {
+                backdrop.remove();
+            });
+            
+            // 移除body上的modal-open类
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            
+            // 清空模态框内容，防止内存泄漏
+            document.getElementById('photoModalImg').setAttribute('src', '');
+            
+            // 销毁模态框实例
+            if (modalInstance) {
+                modalInstance.dispose();
+                modalInstance = null;
+            }
+        });
+    });
+</script>
+{% endblock %}

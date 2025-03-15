@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}家庭日历 - 家庭网站{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
+<style>
+    .fc-event {
+        cursor: pointer;
+    }
+    
+    .fc-event-title {
+        font-weight: 500;
+    }
+    
+    .fc-daygrid-day-number {
+        font-weight: 500;
+    }
+    
+    .fc-toolbar-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .fc-today-button {
+        text-transform: capitalize;
+    }
+    
+    .fc .fc-button-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .fc .fc-button-primary:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+    }
+    
+    .fc .fc-button-primary:disabled {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+    }
+    
+    .fc .fc-daygrid-day.fc-day-today {
+        background-color: var(--calendar-today-bg);
+    }
+    
+    .event-details {
+        padding: 15px;
+    }
+    
+    .event-details h5 {
+        margin-bottom: 10px;
+    }
+    
+    .event-details .event-time {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    
+    .event-details .event-description {
+        margin-bottom: 15px;
+    }
+    
+    .event-details .event-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+        <li class="breadcrumb-item active" aria-current="page">家庭日历</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-calendar-alt me-2"></i>家庭日历</h1>
+    <div>
+        <a href="{{ url_for('calendar.upcoming') }}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-clock me-1"></i>即将到来
+        </a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('calendar.create_schedule') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-1"></i>添加日程
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 事件详情模态框 -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">日程详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body">
+                <div class="event-details">
+                    <h5 id="event-title"></h5>
+                    <div class="event-time">
+                        <i class="far fa-clock me-1"></i><span id="event-time"></span>
+                    </div>
+                    <div class="event-description" id="event-description"></div>
+                    <div id="event-reminder" class="mb-3" style="display: none;">
+                        <i class="fas fa-bell me-1"></i>提醒时间：<span id="event-reminder-time"></span>
+                    </div>
+                    <div class="event-actions" id="event-actions"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales/zh-cn.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'zh-cn',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            buttonText: {
+                today: '今天',
+                month: '月',
+                week: '周',
+                day: '日'
+            },
+            events: [
+                {% for schedule in schedules %}
+                {
+                    id: '{{ schedule.id }}',
+                    title: '{{ schedule.title }}',
+                    start: '{{ schedule.start_time.isoformat() }}',
+                    {% if schedule.end_time %}
+                    end: '{{ schedule.end_time.isoformat() }}',
+                    {% endif %}
+                    allDay: {{ 'true' if schedule.all_day else 'false' }},
+                    extendedProps: {
+                        description: '{{ schedule.description|default("") }}',
+                        userId: {{ schedule.user_id }},
+                        username: '{{ schedule.user.username }}',
+                        reminder: {{ 'true' if schedule.reminder else 'false' }},
+                        {% if schedule.reminder_time %}
+                        reminderTime: '{{ schedule.reminder_time.isoformat() }}'
+                        {% else %}
+                        reminderTime: null
+                        {% endif %}
+                    }
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            eventClick: function(info) {
+                const event = info.event;
+                const props = event.extendedProps;
+                
+                // 设置模态框内容
+                document.getElementById('event-title').textContent = event.title;
+                
+                // 设置时间显示
+                let timeText = '';
+                if (event.allDay) {
+                    timeText = '全天事件';
+                    if (event.end) {
+                        const startDate = new Date(event.start);
+                        const endDate = new Date(event.end);
+                        timeText = `${startDate.toLocaleDateString()} 至 ${endDate.toLocaleDateString()} (全天)`;
+                    } else {
+                        timeText = `${new Date(event.start).toLocaleDateString()} (全天)`;
+                    }
+                } else {
+                    const startTime = new Date(event.start);
+                    if (event.end) {
+                        const endTime = new Date(event.end);
+                        timeText = `${startTime.toLocaleString()} 至 ${endTime.toLocaleString()}`;
+                    } else {
+                        timeText = startTime.toLocaleString();
+                    }
+                }
+                document.getElementById('event-time').textContent = timeText;
+                
+                // 设置描述
+                document.getElementById('event-description').textContent = props.description || '无描述';
+                
+                // 设置提醒信息
+                const reminderElement = document.getElementById('event-reminder');
+                if (props.reminder && props.reminderTime) {
+                    reminderElement.style.display = 'block';
+                    document.getElementById('event-reminder-time').textContent = new Date(props.reminderTime).toLocaleString();
+                } else {
+                    reminderElement.style.display = 'none';
+                }
+                
+                // 设置操作按钮
+                const actionsContainer = document.getElementById('event-actions');
+                actionsContainer.innerHTML = '';
+                
+                {% if current_user.is_authenticated %}
+                if (props.userId === {{ current_user.id }}) {
+                    // 编辑按钮
+                    const editButton = document.createElement('a');
+                    editButton.href = `/calendar/${event.id}/edit`;
+                    editButton.className = 'btn btn-sm btn-outline-primary me-2';
+                    editButton.innerHTML = '<i class="fas fa-edit me-1"></i>编辑';
+                    actionsContainer.appendChild(editButton);
+                    
+                    // 删除按钮
+                    const deleteButton = document.createElement('a');
+                    deleteButton.href = '#';
+                    deleteButton.className = 'btn btn-sm btn-outline-danger';
+                    deleteButton.innerHTML = '<i class="fas fa-trash-alt me-1"></i>删除';
+                    deleteButton.onclick = function(e) {
+                        e.preventDefault();
+                        if (confirm('确定要删除这个日程吗？此操作不可撤销。')) {
+                            window.location.href = `/calendar/${event.id}/delete`;
+                        }
+                    };
+                    actionsContainer.appendChild(deleteButton);
+                }
+                {% endif %}
+                
+                // 显示模态框
+                const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+                eventModal.show();
+            }
+        });
+        
+        calendar.render();
+    });
+</script>
+{% endblock %}

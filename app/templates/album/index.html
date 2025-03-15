@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+
+{% block title %}家庭相册 - 家庭网站{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .album-card {
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    
+    .album-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .album-cover {
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .album-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .album-meta {
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+    }
+    
+    .album-description {
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        height: 48px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    /* 幻灯片样式 */
+    .slideshow-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        overflow: hidden;
+    }
+    
+    .slideshow-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .slideshow-img {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        transition: opacity 0.5s ease;
+    }
+    
+    .slideshow-close {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        color: white;
+        font-size: 30px;
+        cursor: pointer;
+        z-index: 10000;
+    }
+    
+    .slideshow-controls {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: white;
+    }
+    
+    .slideshow-caption {
+        position: absolute;
+        bottom: 60px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        max-width: 80%;
+        margin: 0 auto;
+        border-radius: 5px;
+    }
+    
+    .slideshow-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 5px;
+        background-color: var(--primary-color);
+        width: 0%;
+        transition: width 0.1s linear;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+        <li class="breadcrumb-item active" aria-current="page">家庭相册</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-images me-2"></i>家庭相册</h1>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('album.create_album') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-1"></i>创建相册
+    </a>
+    {% endif %}
+</div>
+
+{% if albums %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for album in albums %}
+    <div class="col">
+        <div class="card album-card h-100">
+            {% if album.cover_photo %}
+            <img src="{{ url_for('static', filename='uploads/' + album.cover_photo.filename) }}" 
+                 class="card-img-top album-cover" alt="{{ album.title }}">
+            {% else %}
+            <img src="{{ url_for('static', filename='img/album-placeholder.jpg') }}" 
+                 class="card-img-top album-cover" alt="相册封面">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title album-title">
+                    <a href="{{ url_for('album.view_album', album_id=album.id) }}" class="text-decoration-none text-dark">
+                        {{ album.title }}
+                    </a>
+                </h5>
+                <div class="album-meta">
+                    <span><i class="far fa-images me-1"></i>{{ album.photos.count() }}张照片</span>
+                    <span class="ms-2"><i class="far fa-calendar-alt me-1"></i>{{ album.created_at.strftime('%Y年%m月%d日') }}</span>
+                </div>
+                {% if album.description %}
+                <p class="card-text album-description">{{ album.description }}</p>
+                {% endif %}
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ url_for('album.view_album', album_id=album.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>查看相册
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-primary ms-1 slideshow-btn" data-album-id="{{ album.id }}">
+                            <i class="fas fa-play me-1"></i>播放幻灯
+                        </a>
+                    </div>
+                    {% if current_user.is_authenticated and album.user_id == current_user.id %}
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ album.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ album.id }}">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('album.edit_album', album_id=album.id) }}">
+                                    <i class="fas fa-edit me-1"></i>编辑相册
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('album.upload_photo', album_id=album.id) }}">
+                                    <i class="fas fa-upload me-1"></i>上传照片
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#" 
+                                   onclick="if(confirm('确定要删除这个相册吗？此操作将删除相册中的所有照片，且不可撤销。')) { window.location.href='{{ url_for('album.delete_album', album_id=album.id) }}'; return false; }">
+                                    <i class="fas fa-trash-alt me-1"></i>删除相册
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>还没有相册。
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('album.create_album') }}" class="alert-link">点击这里</a>创建第一个相册！
+    {% else %}
+    请登录后创建相册。
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- 幻灯片模态框 -->
+<div id="slideshowModal" class="slideshow-modal">
+    <div class="slideshow-close">&times;</div>
+    <div class="slideshow-content">
+        <img id="slideshowImage" class="slideshow-img" src="" alt="幻灯片">
+        <div id="slideshowCaption" class="slideshow-caption"></div>
+        <div class="slideshow-controls">
+            <span id="slideshowCounter">1/10</span>
+        </div>
+        <div id="slideshowProgress" class="slideshow-progress"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 幻灯片播放功能
+    const slideshowModal = document.getElementById('slideshowModal');
+    const slideshowImage = document.getElementById('slideshowImage');
+    const slideshowCaption = document.getElementById('slideshowCaption');
+    const slideshowCounter = document.getElementById('slideshowCounter');
+    const slideshowProgress = document.getElementById('slideshowProgress');
+    const slideshowClose = document.querySelector('.slideshow-close');
+    
+    let photos = [];
+    let currentIndex = 0;
+    let slideshowInterval;
+    let slideshowDuration = 5000; // 5秒
+    
+    // 点击播放幻灯片按钮
+    document.querySelectorAll('.slideshow-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const albumId = this.getAttribute('data-album-id');
+            startSlideshow(albumId);
+        });
+    });
+    
+    // 关闭幻灯片
+    slideshowClose.addEventListener('click', stopSlideshow);
+    
+    // 按键监听
+    document.addEventListener('keydown', function(e) {
+        if (slideshowModal.style.display === 'block') {
+            if (e.key === 'Escape' || e.key === 'q' || e.key === 'Q') {
+                stopSlideshow();
+            } else if (e.key === 'ArrowRight') {
+                showNextPhoto();
+            } else if (e.key === 'ArrowLeft') {
+                showPreviousPhoto();
+            }
+        }
+    });
+    
+    // 开始幻灯片播放
+    function startSlideshow(albumId) {
+        // 获取相册照片
+        fetch(`/album/api/photos/${albumId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.photos && data.photos.length > 0) {
+                    photos = data.photos;
+                    currentIndex = 0;
+                    
+                    // 显示第一张照片
+                    showPhoto(currentIndex);
+                    
+                    // 显示模态框
+                    slideshowModal.style.display = 'block';
+                    
+                    // 开始自动播放
+                    startAutoPlay();
+                } else {
+                    alert('该相册没有照片可播放');
+                }
+            })
+            .catch(error => {
+                console.error('获取照片失败:', error);
+                alert('获取照片失败，请稍后再试');
+            });
+    }
+    
+    // 显示照片
+    function showPhoto(index) {
+        const photo = photos[index];
+        slideshowImage.src = `/static/uploads/photos/${photo.filename.split('/').pop()}`;
+        slideshowCaption.textContent = photo.description || photo.title || '';
+        slideshowCounter.textContent = `${index + 1}/${photos.length}`;
+        
+        // 重置进度条
+        slideshowProgress.style.width = '0%';
+        
+        // 动画进度条
+        let startTime = Date.now();
+        let progressInterval = setInterval(() => {
+            let elapsedTime = Date.now() - startTime;
+            let progress = (elapsedTime / slideshowDuration) * 100;
+            slideshowProgress.style.width = `${Math.min(progress, 100)}%`;
+            
+            if (progress >= 100) {
+                clearInterval(progressInterval);
+            }
+        }, 50);
+    }
+    
+    // 显示下一张照片
+    function showNextPhoto() {
+        currentIndex = (currentIndex + 1) % photos.length;
+        showPhoto(currentIndex);
+    }
+    
+    // 显示上一张照片
+    function showPreviousPhoto() {
+        currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+        showPhoto(currentIndex);
+    }
+    
+    // 开始自动播放
+    function startAutoPlay() {
+        // 清除之前的定时器
+        if (slideshowInterval) {
+            clearInterval(slideshowInterval);
+        }
+        
+        // 设置新的定时器
+        slideshowInterval = setInterval(function() {
+            showNextPhoto();
+        }, slideshowDuration);
+    }
+    
+    // 停止幻灯片播放
+    function stopSlideshow() {
+        slideshowModal.style.display = 'none';
+        if (slideshowInterval) {
+            clearInterval(slideshowInterval);
+        }
+    }
+    
+    // 点击模态框背景关闭
+    slideshowModal.addEventListener('click', function(e) {
+        if (e.target === slideshowModal) {
+            stopSlideshow();
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}添加日程 - 家庭网站{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('calendar.index') }}">家庭日历</a></li>
+        <li class="breadcrumb-item active" aria-current="page">添加日程</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-calendar-plus me-2"></i>添加日程</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title(class="form-control", id="title") }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.title.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description(class="form-control", id="description", rows=3) }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.all_day(class="form-check-input", id="all_day") }}
+                        <label class="form-check-label" for="all_day">
+                            {{ form.all_day.label }}
+                        </label>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="start_time" class="form-label">{{ form.start_time.label }}</label>
+                            {{ form.start_time(class="form-control", id="start_time") }}
+                            {% if form.start_time.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.start_time.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">格式：YYYY-MM-DD HH:MM (例如：2025-03-13 14:30)</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="end_time" class="form-label">{{ form.end_time.label }}</label>
+                            {{ form.end_time(class="form-control", id="end_time") }}
+                            {% if form.end_time.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.end_time.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">格式：YYYY-MM-DD HH:MM (例如：2025-03-13 16:30)，可选</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.reminder(class="form-check-input", id="reminder") }}
+                        <label class="form-check-label" for="reminder">
+                            {{ form.reminder.label }}
+                        </label>
+                    </div>
+                    
+                    <div class="mb-3" id="reminder_time_container">
+                        <label for="reminder_time" class="form-label">{{ form.reminder_time.label }}</label>
+                        {{ form.reminder_time(class="form-control", id="reminder_time") }}
+                        {% if form.reminder_time.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.reminder_time.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">格式：YYYY-MM-DD HH:MM (例如：2025-03-13 10:00)</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('calendar.index') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>取消
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const reminderCheckbox = document.getElementById('reminder');
+        const reminderTimeContainer = document.getElementById('reminder_time_container');
+        const allDayCheckbox = document.getElementById('all_day');
+        const startTimeInput = document.getElementById('start_time');
+        const endTimeInput = document.getElementById('end_time');
+        
+        // 初始化提醒时间容器的显示状态
+        updateReminderTimeVisibility();
+        
+        // 监听提醒复选框的变化
+        reminderCheckbox.addEventListener('change', updateReminderTimeVisibility);
+        
+        // 更新提醒时间输入框的可见性
+        function updateReminderTimeVisibility() {
+            if (reminderCheckbox.checked) {
+                reminderTimeContainer.style.display = 'block';
+            } else {
+                reminderTimeContainer.style.display = 'none';
+            }
+        }
+    });
+</script>
+{% endblock %}

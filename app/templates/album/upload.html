@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}上传照片 - {{ album.title }} - 家庭网站{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .preview-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .preview-item {
+        position: relative;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .preview-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    .preview-remove {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(255, 255, 255, 0.8);
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #dc3545;
+        cursor: pointer;
+    }
+    
+    .preview-remove:hover {
+        background: white;
+    }
+    
+    .dropzone {
+        border: 2px dashed #0d6efd;
+        border-radius: 5px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .dropzone:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .dropzone.dragover {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    
+    .dropzone i {
+        font-size: 2rem;
+        color: #0d6efd;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('album.index') }}">家庭相册</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('album.view_album', album_id=album.id) }}">{{ album.title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">上传照片</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-upload me-2"></i>上传照片到 "{{ album.title }}"</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <div class="dropzone" id="dropzone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h5>拖放照片到这里或点击选择文件</h5>
+                            <p class="text-muted">支持的格式：JPG, JPEG, PNG, GIF</p>
+                            {{ form.photos(class="d-none", id="photos", multiple=True, accept=".jpg,.jpeg,.png,.gif") }}
+                        </div>
+                        {% if form.photos.errors %}
+                        <div class="invalid-feedback d-block mt-2">
+                            {% for error in form.photos.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="preview-container" id="previewContainer"></div>
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title(class="form-control", id="title") }}
+                        <div class="form-text">可选，将应用于所有上传的照片</div>
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.title.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description(class="form-control", id="description", rows=3) }}
+                        <div class="form-text">可选，将应用于所有上传的照片</div>
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.is_private(class="form-check-input", id="is_private") }}
+                        <label class="form-check-label" for="is_private">
+                            {{ form.is_private.label }}
+                        </label>
+                        <div class="form-text">私密照片只有您自己可以查看</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('album.view_album', album_id=album.id) }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>取消
+                        </a>
+                        {{ form.submit(class="btn btn-primary", id="submitBtn") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('photos');
+        const previewContainer = document.getElementById('previewContainer');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // 初始化
+        submitBtn.disabled = true;
+        
+        // 点击区域触发文件选择
+        dropzone.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        // 拖放事件
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropzone.classList.add('dragover');
+        }
+        
+        function unhighlight() {
+            dropzone.classList.remove('dragover');
+        }
+        
+        // 处理拖放文件
+        dropzone.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+        
+        // 处理文件选择
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+        
+        function handleFiles(files) {
+            if (files.length > 0) {
+                submitBtn.disabled = false;
+                
+                // 清空预览区域
+                previewContainer.innerHTML = '';
+                
+                // 创建文件列表对象
+                const dataTransfer = new DataTransfer();
+                
+                // 添加预览
+                Array.from(files).forEach((file, index) => {
+                    if (file.type.match('image.*')) {
+                        dataTransfer.items.add(file);
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const preview = document.createElement('div');
+                            preview.className = 'preview-item';
+                            preview.innerHTML = `
+                                <img src="${e.target.result}" alt="预览">
+                                <button type="button" class="preview-remove" data-index="${index}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                            previewContainer.appendChild(preview);
+                            
+                            // 添加删除按钮事件
+                            preview.querySelector('.preview-remove').addEventListener('click', function() {
+                                const index = parseInt(this.getAttribute('data-index'));
+                                removeFile(index);
+                                preview.remove();
+                                
+                                // 如果没有文件了，禁用提交按钮
+                                if (fileInput.files.length === 0) {
+                                    submitBtn.disabled = true;
+                                }
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                
+                // 更新文件输入
+                fileInput.files = dataTransfer.files;
+            }
+        }
+        
+        function removeFile(index) {
+            const dt = new DataTransfer();
+            const files = fileInput.files;
+            
+            for (let i = 0; i < files.length; i++) {
+                if (i !== index) {
+                    dt.items.add(files[i]);
+                }
+            }
+            
+            fileInput.files = dt.files;
+            
+            // 重新分配索引
+            const removeButtons = document.querySelectorAll('.preview-remove');
+            for (let i = 0; i < removeButtons.length; i++) {
+                removeButtons[i].setAttribute('data-index', i);
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}关于我们 - 家庭网站{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title text-center mb-4">关于家庭网站</h1>
+                
+                <div class="mb-4">
+                    <h3><i class="fas fa-info-circle me-2 text-primary"></i>我们的使命</h3>
+                    <p>家庭网站致力于为家庭提供一个安全、私密的平台，用于记录和分享珍贵的家庭回忆。我们相信，每个家庭的故事都值得被记录和传承。</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h3><i class="fas fa-cogs me-2 text-primary"></i>功能特点</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <i class="fas fa-images me-2 text-primary"></i>家庭相册
+                                    <p class="small text-muted mb-0">创建相册并上传照片，记录家庭的美好瞬间。</p>
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-history me-2 text-primary"></i>家庭时间线
+                                    <p class="small text-muted mb-0">记录家庭重要事件和里程碑，创建家庭历史时间线。</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <i class="far fa-calendar-alt me-2 text-primary"></i>家庭日历
+                                    <p class="small text-muted mb-0">管理家庭活动、生日、纪念日和其他重要日期。</p>
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-lock me-2 text-primary"></i>隐私保护
+                                    <p class="small text-muted mb-0">您的家庭数据受到严格保护，只有您和您授权的家庭成员才能访问。</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h3><i class="fas fa-users me-2 text-primary"></i>我们的团队</h3>
+                    <p>我们是一群热爱家庭、热爱技术的开发者，致力于为家庭提供最好的数字记忆解决方案。</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h3><i class="fas fa-shield-alt me-2 text-primary"></i>隐私承诺</h3>
+                    <p>我们深知家庭记忆的私密性和重要性。我们承诺：</p>
+                    <ul>
+                        <li>您的数据始终属于您，我们不会未经您的许可分享您的任何信息</li>
+                        <li>我们使用最先进的加密技术保护您的数据安全</li>
+                        <li>您可以随时删除您的账户和所有相关数据</li>
+                    </ul>
+                </div>
+                
+                <div class="text-center mt-5">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-1"></i>返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}创建相册 - 家庭网站{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">首页</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('album.index') }}">家庭相册</a></li>
+        <li class="breadcrumb-item active" aria-current="page">创建相册</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>创建新相册</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title(class="form-control", id="title") }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.title.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description(class="form-control", id="description", rows=4) }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">描述这个相册的内容，例如：家庭旅行、节日庆祝等</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('album.index') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>取消
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>相册提示</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>创建相册后，您可以上传照片到相册中</li>
+                    <li>您可以为每张照片添加描述</li>
+                    <li>您可以设置照片为私密，只有您自己可以查看</li>
+                    <li>您可以随时删除相册或照片</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
