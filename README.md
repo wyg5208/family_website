@@ -12,6 +12,11 @@
 6. **色彩配置**：支持蓝色系、紫色系、灰色系和绿色系四种色彩主题
 7. **响应式设计**：适配各种设备屏幕大小
 
+   
+首页截图
+
+![在这里插入图片描述](https://i-blog.csdnimg.cn/direct/b946c44b302b41d38cd840410527ff24.png#pic_center)
+
 ## 技术栈
 
 - **后端**：Flask、SQLAlchemy、Flask-Login
